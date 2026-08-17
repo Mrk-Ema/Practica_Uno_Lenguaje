@@ -1,4 +1,6 @@
-AGENTE analista
-variable ventas 100
-contexto analista
-PREGUNTAR datos 2.5
+@modelo "claude-sonnet-4-6"
+AGENTE analista {
+contexto = "Eres un analista"
+variable ventas = CARGAR("ventas.csv")
+PREGUNTAR "Que paso?" SOBRE ventas, datos
+}

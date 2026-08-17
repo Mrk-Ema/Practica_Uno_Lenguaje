@@ -21,6 +21,17 @@ public class Tokenizador {
                 leerPalabra();
             } else if (Character.isDigit(caracterActual)) {
                 leerNumero();
+            } else if (caracterActual == '@') {
+                leerDirectiva();
+            } else if (caracterActual == '"') {
+                leerCadena();
+            } else if (caracterActual == '=') {
+                tokenUnCaracter("Operador asignacion");
+            } else if (caracterActual == '+') {
+                tokenUnCaracter("Operador concatenacion");
+            } else if (caracterActual == '{' || caracterActual == '}' || caracterActual == '('
+                    || caracterActual == ')' || caracterActual == ',') {
+                tokenUnCaracter("Delimitador");
             } else {
                 avanzar();
             }
@@ -71,6 +82,40 @@ public class Tokenizador {
         } else {
             tokens.add(new Token(sb.toString(), "Literal numerico entero", f, c));
         }
+    }
+
+    private void leerDirectiva() {
+        int f = fila, c = columna;
+        StringBuilder sb = new StringBuilder();
+        sb.append(entrada.charAt(posicion));
+        avanzar();
+        while (posicion < entrada.length() && Character.isLetter(entrada.charAt(posicion))) {
+            sb.append(entrada.charAt(posicion));
+            avanzar();
+        }
+        String tipo = Diccionario.clasificar(sb.toString());
+        tokens.add(new Token(sb.toString(), tipo == null ? "Directiva" : tipo, f, c));
+    }
+
+    private void leerCadena() {
+        int f = fila, c = columna;
+        StringBuilder sb = new StringBuilder();
+        sb.append(entrada.charAt(posicion));
+        avanzar();
+        while (posicion < entrada.length()) {
+            char ch = entrada.charAt(posicion);
+            sb.append(ch);
+            avanzar();
+            if (ch == '"') {
+                break;
+            }
+        }
+        tokens.add(new Token(sb.toString(), "Literal cadena", f, c));
+    }
+
+    private void tokenUnCaracter(String tipo) {
+        tokens.add(new Token(String.valueOf(entrada.charAt(posicion)), tipo, fila, columna));
+        avanzar();
     }
 
     public List<Token> getTokens() {
