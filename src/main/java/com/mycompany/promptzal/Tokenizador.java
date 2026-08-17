@@ -1,0 +1,79 @@
+package com.mycompany.promptzal;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class Tokenizador {
+
+    private List<Token> tokens = new ArrayList<>();
+    private String entrada;
+    private int posicion = 0;
+    private int fila = 1;
+    private int columna = 1;
+
+    public void analizar(String contenido) {
+        this.entrada = contenido;
+        while (posicion < entrada.length()) {
+            char caracterActual = entrada.charAt(posicion);
+            if (Character.isWhitespace(caracterActual)) {
+                avanzar();
+            } else if (Character.isLetter(caracterActual) || caracterActual == '_') {
+                leerPalabra();
+            } else if (Character.isDigit(caracterActual)) {
+                leerNumero();
+            } else {
+                avanzar();
+            }
+        }
+    }
+
+    private void avanzar() {
+        if (entrada.charAt(posicion) == '\n') {
+            fila++;
+            columna = 1;
+        } else {
+            columna++;
+        }
+        posicion++;
+    }
+
+    private void leerPalabra() {
+        int f = fila, c = columna;
+        StringBuilder sb = new StringBuilder();
+        while (posicion < entrada.length()) {
+            char ch = entrada.charAt(posicion);
+            if (Character.isLetter(ch) || Character.isDigit(ch) || ch == '_') {
+                sb.append(ch);
+                avanzar();
+            } else {
+                break;
+            }
+        }
+        String tipo = Diccionario.clasificar(sb.toString());
+        tokens.add(new Token(sb.toString(), tipo == null ? "Identificador" : tipo, f, c));
+    }
+
+    private void leerNumero() {
+        int f = fila, c = columna;
+        StringBuilder sb = new StringBuilder();
+        while (posicion < entrada.length() && Character.isDigit(entrada.charAt(posicion))) {
+            sb.append(entrada.charAt(posicion));
+            avanzar();
+        }
+        if (posicion + 1 < entrada.length() && entrada.charAt(posicion) == '.' && Character.isDigit(entrada.charAt(posicion + 1))) {
+            sb.append('.');
+            avanzar();
+            while (posicion < entrada.length() && Character.isDigit(entrada.charAt(posicion))) {
+                sb.append(entrada.charAt(posicion));
+                avanzar();
+            }
+            tokens.add(new Token(sb.toString(), "Literal numerico decimal", f, c));
+        } else {
+            tokens.add(new Token(sb.toString(), "Literal numerico entero", f, c));
+        }
+    }
+
+    public List<Token> getTokens() {
+        return tokens;
+    }
+}

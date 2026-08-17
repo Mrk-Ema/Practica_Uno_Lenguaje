@@ -1,0 +1,4 @@
+AGENTE analista
+variable ventas 100
+contexto analista
+PREGUNTAR datos 2.5
