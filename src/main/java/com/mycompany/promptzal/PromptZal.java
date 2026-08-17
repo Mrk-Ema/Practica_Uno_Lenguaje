@@ -16,6 +16,7 @@ public class PromptZal {
             Tokenizador t = new Tokenizador();
             t.analizar(contenido);
             Reportes.imprimirConsola(t.getTokens());
+            Reportes.imprimirErrores(t.getErrores());
         } catch (Exception e) {
             System.out.println("No se pudo leer el archivo: " + e.getMessage());
         }

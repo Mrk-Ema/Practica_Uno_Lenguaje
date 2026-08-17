@@ -6,6 +6,7 @@ import java.util.List;
 public class Tokenizador {
 
     private List<Token> tokens = new ArrayList<>();
+    private List<Token> errores = new ArrayList<>();
     private String entrada;
     private int posicion = 0;
     private int fila = 1;
@@ -32,7 +33,16 @@ public class Tokenizador {
             } else if (caracterActual == '{' || caracterActual == '}' || caracterActual == '('
                     || caracterActual == ')' || caracterActual == ',') {
                 tokenUnCaracter("Delimitador");
+            } else if (caracterActual == '-' && posicion + 1 < entrada.length()
+                    && entrada.charAt(posicion + 1) == '>') {
+                tokens.add(new Token("->", "Conector", fila, columna));
+                avanzar();
+                avanzar();
+            } else if (caracterActual == '/') {
+                comentario();
             } else {
+                errores.add(new Token(String.valueOf(caracterActual),
+                        "Error lexico: caracter no reconocido", fila, columna));
                 avanzar();
             }
         }
@@ -102,15 +112,54 @@ public class Tokenizador {
         StringBuilder sb = new StringBuilder();
         sb.append(entrada.charAt(posicion));
         avanzar();
+        boolean cerrada = false;
         while (posicion < entrada.length()) {
             char ch = entrada.charAt(posicion);
-            sb.append(ch);
-            avanzar();
             if (ch == '"') {
+                sb.append(ch);
+                avanzar();
+                cerrada = true;
                 break;
             }
+            if (ch == '\n') {
+                break;
+            }
+            sb.append(ch);
+            avanzar();
         }
-        tokens.add(new Token(sb.toString(), "Literal cadena", f, c));
+        if (cerrada) {
+            tokens.add(new Token(sb.toString(), "Literal cadena", f, c));
+        } else {
+            errores.add(new Token(sb.toString(), "Error lexico: cadena sin cerrar", f, c));
+        }
+    }
+
+    private void comentario() {
+        int f = fila, c = columna;
+        if (posicion + 1 < entrada.length() && entrada.charAt(posicion + 1) == '/') {
+            while (posicion < entrada.length() && entrada.charAt(posicion) != '\n') {
+                avanzar();
+            }
+        } else if (posicion + 1 < entrada.length() && entrada.charAt(posicion + 1) == '*') {
+            avanzar();
+            avanzar();
+            boolean cerrado = false;
+            while (posicion + 1 < entrada.length()) {
+                if (entrada.charAt(posicion) == '*' && entrada.charAt(posicion + 1) == '/') {
+                    avanzar();
+                    avanzar();
+                    cerrado = true;
+                    break;
+                }
+                avanzar();
+            }
+            if (!cerrado) {
+                errores.add(new Token("/*", "Error lexico: comentario de bloque sin cerrar", f, c));
+            }
+        } else {
+            errores.add(new Token("/", "Error lexico: caracter no reconocido", f, c));
+            avanzar();
+        }
     }
 
     private void tokenUnCaracter(String tipo) {
@@ -120,5 +169,9 @@ public class Tokenizador {
 
     public List<Token> getTokens() {
         return tokens;
+    }
+
+    public List<Token> getErrores() {
+        return errores;
     }
 }
